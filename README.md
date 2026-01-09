@@ -5,10 +5,8 @@
 **Edition:** 2026
 
 
-
-
 **In 2026, breaking crypto rarely means factoring primes; it means identifying the one assumption a developer forgot to protect.
-We ignore academic proofs to focus on exploitability.* 
+We ignore academic proofs to focus on exploitability.*** 
 
 # Summary
 
