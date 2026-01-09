@@ -1,12 +1,12 @@
-### Offensive Security Crypto Handbook
+# Offensive Security Crypto Handbook
 
 **Author:** Janis Vizulis  
 **Contact:** janis@vizulis.net  
 **Edition:** 2026
 
 
-In 2026, breaking crypto rarely means factoring primes; it means identifying the one assumption a developer forgot to protect.
-We ignore academic proofs to focus on exploitability. 
+**In 2026, breaking crypto rarely means factoring primes; it means identifying the one assumption a developer forgot to protect.
+We ignore academic proofs to focus on exploitability.* 
 
 # Summary
 
