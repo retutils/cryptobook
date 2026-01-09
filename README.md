@@ -23,4 +23,3 @@ We ignore academic proofs to focus on exploitability.
 * [10. Cloud KMS & IAM Boundaries](chapters/10_cloud.md)
 * [11. Modern Primitives & PQC](chapters/11_modern.md)
 * [12. Exploitability & Reporting](chapters/12_reporting.md)
-* [Appendix: Illustration Prompts](appendix/prompts.md)
