@@ -258,12 +258,19 @@ observed = [target_rng.getrandbits(32) for _ in range(624)]
 # Reconstruct internal state
 def untemper(y):
     """Reverse the Mersenne Twister tempering transform."""
+    # Undo: y ^= y >> 18  (top 18 bits unchanged, simple)
     y ^= y >> 18
+    # Undo: y ^= (y << 15) & 0xEFC60000  (bottom 15 bits unchanged)
     y ^= (y << 15) & 0xEFC60000
-    for i in range(7):
-        y ^= (y << 7) & 0x9D2C5680
-    y ^= y >> 11
-    y ^= y >> 22
+    # Undo: y ^= (y << 7) & 0x9D2C5680
+    # Bottom 7 bits are unchanged; recover 7 bits at a time
+    tmp = y
+    for _ in range(4):
+        tmp = y ^ (tmp << 7) & 0x9D2C5680
+    y = tmp
+    # Undo: y ^= y >> 11  (top 11 bits unchanged; recover in two steps)
+    y ^= (y >> 11) & 0xFFE00000  # bits 21–31 correct → recover bits 10–20
+    y ^= y >> 22                 # then recover bits 0–9
     return y
 
 # Clone the RNG

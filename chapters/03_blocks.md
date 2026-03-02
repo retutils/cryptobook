@@ -379,29 +379,28 @@ ct = encrypt_cookie("attacker")
 print(f"Original cookie:  {decrypt_cookie(ct)}")
 
 # We know the plaintext structure: "user=attacker&role=user&ts=..."
-# "role=user" starts at byte 20 in plaintext
-# We want to change "user" to "admn" (same length)
-# P[i] = AES⁻¹(C[i]) ⊕ C[i-1]
-# If we XOR C[i-1] with (old_byte ⊕ new_byte), P[i] changes accordingly
+# With username "attacker" (8 chars), the full plaintext is:
+#   Byte index: 0         1         2
+#               0123456789012345|6789012345678901|...
+#   Content:    user=attacker&ro|le=user&ts=12345|...
+#               ← Block 1 (16) →← Block 2 (16) →
+#
+# The 'u' in "role=user" → plaintext byte 19 → block 2, index 3
+# To flip P[i], we XOR C[i-1] at the same offset with (old ⊕ new)
+# C[i-1] here = first ciphertext block, which starts after the 16-byte IV
 
 ct_array = bytearray(ct)
 
-# "user" in "role=user" → positions in the plaintext
-# Position of "u" in "role=user" relative to its block
-# Plaintext: "user=attacker&ro" | "le=user&ts=12345" | ...
-# The 'u' in 'user' of 'role=user' is at index 3 of block 2 (plaintext byte 19)
-# So we modify byte 3 of block 1 (ciphertext index 16+3=19)
+# target_offset = start of ciphertext block 1 (bytes 16–31, after IV)
+target_offset = 16
 
-target_offset = 16  # Start of first ciphertext block (after IV)
-
-# Find and modify: change "user" to "admn" in role value
-# role=user starts at: user=attacker&ro|le=user&...
-# 'u' at block2[3], 's' at block2[4], 'e' at block2[5], 'r' at block2[6]
+# Change "user" to "admn" in role value (same length = 4 bytes)
+# These bytes are at block2[3..6], so we modify block1[3..6]
 old = b"user"
 new = b"admn"
 
 for i in range(len(old)):
-    pos = target_offset + 3 + i  # Position in ciphertext block 1
+    pos = target_offset + 3 + i  # ciphertext byte = IV_len + block1_offset
     ct_array[pos] ^= old[i] ^ new[i]
 
 modified = bytes(ct_array)

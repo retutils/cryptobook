@@ -157,8 +157,7 @@ ph = PasswordHasher(
     time_cost=3,        # iterations
     memory_cost=65536,   # 64 MB
     parallelism=4,       # threads
-    hash_len=32,
-    type=None            # Uses Argon2id by default
+    hash_len=32,         # Argon2id is the default variant
 )
 
 # Hash

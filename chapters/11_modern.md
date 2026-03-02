@@ -116,12 +116,16 @@ import os
 
 # A shared secret (e.g., from ECDH key exchange)
 shared_secret = os.urandom(32)
+salt = os.urandom(32)  # One salt — store alongside the derived keys
 
-# Derive separate keys for encryption and MAC
+# Derive separate keys using same salt but different context labels
+# This is the standard HKDF pattern (RFC 5869):
+#   HKDF-Extract(salt, secret) → PRK
+#   HKDF-Expand(PRK, context, length) → key material
 encryption_key = HKDF(
     master=shared_secret,
     key_len=32,
-    salt=os.urandom(32),   # Random salt
+    salt=salt,
     hashmod=SHA256,
     context=b"encryption"   # Different context = different key
 )
@@ -129,7 +133,7 @@ encryption_key = HKDF(
 mac_key = HKDF(
     master=shared_secret,
     key_len=32,
-    salt=os.urandom(32),
+    salt=salt,              # Same salt as above
     hashmod=SHA256,
     context=b"authentication"
 )

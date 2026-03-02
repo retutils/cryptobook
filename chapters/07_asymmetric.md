@@ -449,29 +449,38 @@ else:
 """
 Diffie-Hellman — key agreement without pre-shared secrets.
 """
-from Crypto.PublicKey import DH
+from Crypto.PublicKey import ECC
 from Crypto.Protocol.KDF import HKDF
 from Crypto.Hash import SHA256
 
-# In practice, use well-known groups (RFC 3526, RFC 7919)
-# Here's the conceptual flow:
+# Classical DH uses well-known groups (RFC 3526, RFC 7919).
+# Modern approach: use ECDH on P-256 or X25519.
 
-# Alice generates parameters and key pair
-# Bob generates key pair with same parameters
-# Both compute shared_secret = other_public ^ my_private mod p
+# ─── ECDH Key Exchange (P-256) ───
 
-# Modern approach: use X25519 (Curve25519 ECDH)
-from Crypto.PublicKey import ECC
+alice_key = ECC.generate(curve='P-256')
+bob_key = ECC.generate(curve='P-256')
 
-alice_key = ECC.generate(curve='Curve25519')
-bob_key = ECC.generate(curve='Curve25519')
+# Compute shared points: alice_private * bob_public = bob_private * alice_public
+alice_shared = int(alice_key.d) * bob_key.pointQ    # scalar × point
+bob_shared   = int(bob_key.d)   * alice_key.pointQ
 
-# In a full implementation, use the ECDH protocol
-# shared_secret = alice_private * bob_public = bob_private * alice_public
+assert alice_shared == bob_shared  # Same point!
 
-print("Diffie-Hellman Key Exchange:")
-print(f"  Alice public: {alice_key.public_key().export_key(format='raw').hex()[:40]}...")
-print(f"  Bob public:   {bob_key.public_key().export_key(format='raw').hex()[:40]}...")
+# Derive a usable key from the shared x-coordinate
+shared_bytes = int(alice_shared.x).to_bytes(32, 'big')
+session_key = HKDF(shared_bytes, 32, b"ecdh-salt", SHA256, context=b"session")
+
+print("ECDH Key Exchange (P-256):")
+print(f"  Alice public x: {int(alice_key.pointQ.x):#010x}"[:50] + "...")
+print(f"  Bob public x:   {int(bob_key.pointQ.x):#010x}"[:50] + "...")
+print(f"  Session key:    {session_key.hex()}")
+
+# For X25519 (Curve25519 ECDH), use the 'cryptography' library:
+#   from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+#   alice = X25519PrivateKey.generate()
+#   bob   = X25519PrivateKey.generate()
+#   shared = alice.exchange(bob.public_key())
 ```
 
 ### Small Subgroup Attacks
